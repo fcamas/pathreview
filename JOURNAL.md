@@ -34,8 +34,8 @@ see the review actually advancing in real time instead of a static spinner.
 4. Watched the browser's network requests to `GET /api/reviews/{id}/status`, which `useReviewStatus.ts` polls every 3 seconds.
 
 **Observed:**
-- Two consecutive polls to `/api/reviews/{id}/status` both returned `{"status":"complete","progress_pct":0}` — i.e. even once the review had *fully finished processing*, `progress_pct` was still `0`.
-- This confirms the root cause traced in code: `api/routes/reviews.py` (`get_review_status`, ~line 166) returns `getattr(review, "progress_pct", 0)`, but `core/models/review.py`'s `Review` model has no `progress_pct` column, so the `getattr` default (`0`) is always returned — the field is never real data, regardless of pipeline stage.
-- Correspondingly, `frontend/src/pages/ReviewPage.tsx` never renders a progress bar or percentage at all — it shows one static "Analyzing your portfolio..." block for the full polling duration, so there's nothing in the UI that could reflect real progress even if the backend sent it.
+- Two consecutive polls to `/api/reviews/{id}/status` both returned `{"status":"complete","progress_pct":0}`, meaning even once the review had *fully finished processing*, `progress_pct` was still `0`.
+- This confirms the root cause traced in code: `api/routes/reviews.py` (`get_review_status`, ~line 166) returns `getattr(review, "progress_pct", 0)`, but `core/models/review.py`'s `Review` model has no `progress_pct` column, so the `getattr` default (`0`) is always returned. The field is never real data, regardless of pipeline stage.
+- Correspondingly, `frontend/src/pages/ReviewPage.tsx` never renders a progress bar or percentage at all. It shows one static "Analyzing your portfolio..." block for the full polling duration, so there's nothing in the UI that could reflect real progress even if the backend sent it.
 
 Full root-cause analysis and fix plan: see `PLAN.md`.
