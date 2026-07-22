@@ -39,3 +39,17 @@ see the review actually advancing in real time instead of a static spinner.
 - Correspondingly, `frontend/src/pages/ReviewPage.tsx` never renders a progress bar or percentage at all. It shows one static "Analyzing your portfolio..." block for the full polling duration, so there's nothing in the UI that could reflect real progress even if the backend sent it.
 
 Full root-cause analysis and fix plan: see `PLAN.md`.
+
+## Week 8 — Reproduction & solution planning
+
+**Reproduction commit link:** https://github.com/fcamas/pathreview/commit/d35cca1d23238c43cbd4ed0e113cf4462e7515c5
+
+**Reproduction summary:**
+Ran the app locally, logged in, and started a real review through the UI while watching `GET /api/reviews/{id}/status` in the network tab. Two consecutive polls both returned `progress_pct: 0`, even after `status` reached `complete`, confirming `progress_pct` is never populated regardless of pipeline stage.
+
+**PLAN.md link:** https://github.com/fcamas/pathreview/blob/fix/97-review-progress-realtime/PLAN.md
+
+**Walkthrough video (recommended):** Not recorded yet.
+
+**Blockers or open questions:**
+Still unsure whether the fix should use fixed milestone percentages (25/50/75/100) at each pipeline stage or something more granular tied to ingestion source count. Plan to confirm against `docs/API.md` before building in Week 9.
