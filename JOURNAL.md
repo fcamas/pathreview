@@ -53,3 +53,34 @@ Ran the app locally, logged in, and started a real review through the UI while w
 
 **Blockers or open questions:**
 Still unsure whether the fix should use fixed milestone percentages (25/50/75/100) at each pipeline stage or something more granular tied to ingestion source count. Plan to confirm against `docs/API.md` before building in Week 9.
+
+## Week 9 — Solution building & PR submission
+
+### Check-in 1 (mid-week)
+
+**Current progress:**
+`docs/API.md` doesn't document a specific contract for `/status`, so went with the simpler fixed-milestone approach from PLAN.md. Implemented the full fix: added the `progress_pct` column and migration, wired `process_review` to advance it 25/50/75/100 across the four pipeline stages (frozen at its last value on any failure path), exposed the real value through the API, and updated `ReviewPage` to render a progress bar and status-aware label instead of the static spinner. Added backend unit tests covering the stage advancement and freeze-on-failure behavior, plus a frontend test suite for the new progress rendering. All sub-tasks from PLAN.md's plan section are done.
+
+**Next steps:**
+Run `make check` / `make test-unit`, confirm no regressions against the documented pre-existing failures, open the PR, and get it reviewed before finalizing.
+
+**Blockers:**
+Pre-commit's mypy hook blocked the first commit attempt over pre-existing type gaps in the two files this fix touches (and, separately, over an isolated hook environment missing sqlalchemy/pydantic/fastapi). Resolved by fixing the pre-existing annotation gaps and correcting `.pre-commit-config.yaml`'s hook dependencies/scope; documented in the PR description.
+
+---
+
+### Check-in 2 (end of week)
+
+**PR link:** [to be added once opened — see compare link below]
+
+**Branch:** `fix/97-review-progress-realtime`
+
+**What you built:**
+Added a real `progress_pct` column to `Review`, advanced it through `process_review`'s four pipeline stages instead of leaving it hardcoded at 0, and updated `ReviewPage` to render a live progress bar and status label driven by the polled value instead of a static spinner.
+
+**Tests added or updated:**
+`tests/unit/test_review_service.py` (progress_pct initialization, stage advancement, freeze-on-failure) and `frontend/src/pages/__tests__/ReviewPage.test.tsx` (pending/processing/failed rendering, progress bar width).
+
+**Self-review confirmation:** [x] make check passes (no new failures vs. documented pre-existing baseline)  [x] make test-unit passes (53 pre-existing failures unchanged, 4 new tests passing)
+
+**Draft PR feedback received from:** none yet
