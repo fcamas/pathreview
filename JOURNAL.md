@@ -84,3 +84,34 @@ Added a real `progress_pct` column to `Review`, advanced it through `process_rev
 **Self-review confirmation:** [x] make check passes (no new failures vs. documented pre-existing baseline)  [x] make test-unit passes (53 pre-existing failures unchanged, 4 new tests passing)
 
 **Draft PR feedback received from:** none yet
+
+## Week 10 — Iteration & reflection
+
+### Reviewer feedback
+
+**Feedback received:** [ ] Yes  [x] No, still awaiting review
+
+**Summary of feedback:**
+No review has come in on the PR for issue #97 as of the Week 10 deadline. Per the Su26 course note, reviewer feedback isn't a feature this term, so this is expected rather than a sign anything is wrong with the submission.
+
+**How you responded:**
+N/A, no feedback arrived to respond to. If comments come in after this journal entry is submitted, I'll address them and update this section, but the branch and PR reflect my own self-review (`make check` / `make test-unit`) as the final word for this module.
+
+---
+
+### Reflection
+
+**What was harder than you expected?**
+Tracing the bug turned out to be two separate, stacked problems rather than one. The backend never had a real `progress_pct` column to begin with (`getattr(review, "progress_pct", 0)` in `api/routes/reviews.py` was silently falling through to its default every time), and the frontend's `ReviewPage.tsx` didn't render any progress value even if the backend had sent one. It would have been easy to fix only the half I noticed first and ship an incomplete patch. Confirming the second bug required actually watching the Network tab through a full review run and noticing the spinner card was pixel-identical across every poll, which is a kind of confirmation that takes longer than reading the code and assuming you understand it. The pre-commit mypy hook blocking my first commit attempt was also more time-consuming than expected, since it surfaced both a real pre-existing type gap in files I was touching and a broken hook environment (missing sqlalchemy/pydantic/fastapi), and I had to fix the tooling before I could even get my own change committed.
+
+**What did you learn about working in a large codebase?**
+Existing patterns matter more than they seem to at first. I didn't invent a new way to persist progress; I followed the migration naming pattern already established by `002_add_error_message_to_reviews.py` and matched the existing status-commit pattern in `process_review()` so the new `progress_pct` commits looked like something a maintainer had written, not a bolted-on afterthought. I also learned that "the code compiles and looks right" isn't the same as "it does what the codebase's own conventions expect." `docs/API.md` didn't document a contract for `/status`, so I had to make a judgment call (fixed 25/50/75/100 milestones instead of granular per-ingestion-source progress) and document that reasoning in PLAN.md rather than just picking one silently.
+
+**How did AI tools help, and where did they fall short?**
+AI assistance was most useful for the mechanical parts: scaffolding the Alembic migration against the existing `002_add_error_message_to_reviews.py` pattern, and writing the initial pass of unit tests covering stage advancement and the freeze-on-failure edge case. It was much weaker at the judgment calls. Deciding between fixed milestones and per-source-count granularity wasn't something I could just ask for; I had to check `docs/API.md` myself, confirm it didn't specify a contract, and make the call based on what was simplest to reason about and test. AI also couldn't do the actual repro work: watching real network requests during a live review run to confirm `progress_pct` stayed at 0 through two consecutive polls was something I had to do by hand, in the browser, against the running app.
+
+**What would you do differently if you started over?**
+I'd try to reproduce the bug end-to-end in the browser before reading any code, rather than after. I jumped into `api/routes/reviews.py` fairly early because the issue description pointed there, and only did the full manual repro (logging in, starting a real review, watching the Network tab) once I already suspected the root cause. Confirming it blind first would have made me more confident I wasn't missing a second contributing bug (which, in this case, there was: the frontend half). I'd also fix the `.pre-commit-config.yaml` hook dependency issue immediately instead of trying to work around it, since it cost real time mid-week that a five-minute tooling fix up front would have avoided.
+
+**What are you most proud of from this module?**
+Catching that this was two bugs, not one. It would have been straightforward to add the `progress_pct` column, wire it through the pipeline, and call the issue closed, since the backend fix alone would have looked complete in a diff. But the frontend was still rendering the same static "Analyzing your portfolio..." block regardless of what the API returned, so a backend-only fix would have shipped and changed nothing a user could see. Catching that gap by actually re-running the repro after the backend change, instead of trusting that the ticket description covered the whole picture, is the part of this module I'd point to as evidence I understood the problem rather than just patched the symptom named in the issue title.
