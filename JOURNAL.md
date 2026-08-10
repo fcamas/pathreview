@@ -71,7 +71,7 @@ Pre-commit's mypy hook blocked the first commit attempt over pre-existing type g
 
 ### Check-in 2 (end of week)
 
-**PR link:** [to be added once opened — see compare link below]
+**PR link:** https://github.com/ascherj/pathreview/pull/536
 
 **Branch:** `fix/97-review-progress-realtime`
 
